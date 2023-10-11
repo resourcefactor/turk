@@ -506,7 +506,7 @@ def ts_make_sales_invoice(source_name, target_doc=None):
 		target.amount = flt(obj.qty) * flt(obj.rate)
 		target.base_amount = flt(obj.qty) * flt(obj.rate) * flt(source_parent.conversion_rate)
 
-		expense_account = frappe.db.get_values("Company", source_parent.company, ["default_expense_account"])[0]
+		expense_account = frappe.db.get_value("Company", source_parent.company, ["default_expense_account"])
 		item_expense_account = frappe.db.get_value("Item Default", {'parent': target.item_code, 'company': source_parent.company}, ["expense_account"])
 		target.expense_account = item_expense_account or expense_account
 
@@ -515,7 +515,7 @@ def ts_make_sales_invoice(source_name, target_doc=None):
 		target.run_method("set_missing_values")
 		target.run_method("calculate_taxes_and_totals")
 
-	doc = get_mapped_doc("Purchase Invoice", source_name,	{
+	doc = get_mapped_doc("Purchase Invoice", source_name, {
 		"Purchase Invoice": {
 			"doctype": "Sales Invoice",
 			"field_map": {
