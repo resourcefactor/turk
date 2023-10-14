@@ -73,7 +73,7 @@ def get_data(filters):
 		pi.posting_date as pi_date, pi.name as pi_no, pii.item_code, pii.item_name, pii.qty as pi_qty
 		from `tabPurchase Invoice` as pi
 		left join `tabPurchase Invoice Item` as pii on pi.name = pii.parent
-		where pi.docstatus = 1 and pi.posting_date >= '{0}' and pi.posting_date <= '{1}'
+		where pi.docstatus = 1 and is_return = 0 and pi.posting_date >= '{0}' and pi.posting_date <= '{1}'
 	""".format(filters.get('from_date'), filters.get('to_date')), as_dict=True)
 
 	for row in result:
@@ -81,7 +81,7 @@ def get_data(filters):
 			si.name as si_no, si.posting_date as si_date, sum(sii.qty) as si_qty
 			from `tabSales Invoice Item` as sii
 			left join `tabSales Invoice` as si on si.name = sii.parent
-			where si.docstatus = 1 and sii.purchase_invoice = '{0}' and sii.item_code = '{1}'
+			where si.docstatus = 1 and is_return = 0 and sii.purchase_invoice = '{0}' and sii.item_code = '{1}'
 			group by si.name""".format(row.pi_no, row.item_code), as_dict=True)
 
 		si_names = si_dates = ""
