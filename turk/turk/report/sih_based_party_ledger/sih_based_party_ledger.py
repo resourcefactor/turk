@@ -5,10 +5,12 @@
 from __future__ import unicode_literals
 import frappe
 
+
 def execute(filters=None):
 	columns = get_columns()
 	data = get_data(filters)
 	return columns, data
+
 
 def get_columns():
 	columns = [
@@ -68,7 +70,6 @@ def get_columns():
 			"label": "Quantity",
 			"width": 150
 		},
-		
 		{
 			"fieldname": "boxes",
 			"fieldtype": "Float",
@@ -108,9 +109,10 @@ def get_columns():
 	]
 	return columns
 
+
 def get_data(filters):
 	if filters.get('party_type') == "Customer":
-		query = """select 
+		query = """select
 			so.posting_date as date,
 			"Sales Invoice" as voucher_type,
 			so.name as voucher_no,
@@ -127,9 +129,9 @@ def get_data(filters):
 			so.remarks
 			from `tabSales Invoice` as so
 			left join `tabSales Invoice Item` as soi on so.name = soi.parent
-			where so.docstatus = 1 and so.customer = '{0}' and so.posting_date >= '{1}' and so.posting_date <= '{2}' 
+			where so.docstatus = 1 and so.customer = '{0}' and so.posting_date >= '{1}' and so.posting_date <= '{2}'
 		union all
-		select 
+		select
 			pe.posting_date as date,
 			"Payment Entry" as voucher_type,
 			pe.name as voucher_no,
@@ -147,7 +149,7 @@ def get_data(filters):
 			from `tabPayment Entry` as pe
 			where pe.docstatus = 1 and pe.party_type = 'Customer' and pe.party = '{0}' and pe.posting_date >= '{1}' and pe.posting_date <= '{2}'
 		union all
-		select 
+		select
 			je.posting_date as date,
 			je.voucher_type,
 			je.name as voucher_no,
@@ -166,10 +168,10 @@ def get_data(filters):
 			left join `tabJournal Entry Account` as jea on je.name = jea.parent
 			where je.docstatus = 1 and jea.party_type = 'Customer' and jea.party = '{0}' and je.posting_date >= '{1}' and je.posting_date <= '{2}'
 			order by date
-		""".format(filters.get('party'),filters.get('from_date'),filters.get('to_date'))
+		""".format(filters.get('party'), filters.get('from_date'), filters.get('to_date'))
 
-	if filters.get('party_type') == "Supplier":
-		query = """select 
+	elif filters.get('party_type') == "Supplier":
+		query = """select
 			po.posting_date as date,
 			"Purchase Invoice" as voucher_type,
 			po.name as voucher_no,
@@ -188,7 +190,7 @@ def get_data(filters):
 			left join `tabPurchase Invoice Item` as poi on po.name = poi.parent
 			where po.docstatus = 1 and po.supplier = '{0}' and po.posting_date >= '{1}' and po.posting_date <= '{2}' 
 		union all
-		select 
+		select
 			pe.posting_date as date,
 			"Payment Entry" as voucher_type,
 			pe.name as voucher_no,
@@ -225,23 +227,23 @@ def get_data(filters):
 			left join `tabJournal Entry Account` as jea on je.name = jea.parent
 			where je.docstatus = 1 and jea.party_type = 'Supplier' and jea.party = '{0}' and je.posting_date >= '{1}' and je.posting_date <= '{2}'
 			order by date
-		""".format(filters.get('party'),filters.get('from_date'),filters.get('to_date'))
-	result = frappe.db.sql(query,as_dict=True)
+		""".format(filters.get('party'), filters.get('from_date'), filters.get('to_date'))
+	result = frappe.db.sql(query, as_dict=True)
 	data = []
 
 	total_qty = 0
 	total_boxes = 0
 	total_debit = 0
 	total_credit = 0
-	current_value= ""
-	previous_value=""
-	cur_pre_val=""
+	current_value = ""
+	previous_value = ""
+	cur_pre_val = ""
 	total_qty1 = 0
 	total_boxes1 = 0
 	total_debit1 = 0
 	total_credit1 = 0
 
-	i=len(result)
+	i = len(result)
 
 	def subTotal():
 		total_row = {
@@ -283,26 +285,62 @@ def get_data(filters):
 		}
 		data.append(total_row1)
 
+	def taxAmount(filters):
+		if filters.get('party_type') == "Customer":
+			taxResult = frappe.db.sql("""select
+				0 as debit,
+				sum(so.discount_amount) as credit
+				from `tabSales Invoice` as so
+				where so.docstatus = 1 and so.customer = '{0}' and so.posting_date >= '{1}' and so.posting_date <= '{2}'
+			""".format(filters.get('party'), filters.get('from_date'), filters.get('to_date')), as_dict=True)
+		elif filters.get('party_type') == "Supplier":
+			taxResult = frappe.db.sql("""select
+				sum(so.discount_amount) as debit,
+				0 as credit
+				from `tabPurchase Invoice` as so
+				where so.docstatus = 1 and so.supplier = '{0}' and so.posting_date >= '{1}' and so.posting_date <= '{2}'
+			""".format(filters.get('party'), filters.get('from_date'), filters.get('to_date')), as_dict=True)
+
+		for res in taxResult:
+			total_row2 = {
+				"date": "",
+				"voucher_type": "",
+				"voucher_no": "",
+				"shipment_no": "",
+				"po_no": "",
+				"fax_no": "",
+				"item_code": "Discounted Amount",
+				"size": "",
+				"qty": "",
+				"boxes": "",
+				"rate": "",
+				"debit": res.debit,
+				"credit": res.credit,
+				"balance": "",
+				"remarks": ""
+			}
+			data.append(total_row2)
+
 	balance1 = 0
 	
 	for row in result:
-		i=i-1
+		i = i - 1
 
 		current_value = row.voucher_no
-		if(cur_pre_val != ""):
-			if(cur_pre_val != current_value):
+		if cur_pre_val != "":
+			if cur_pre_val != current_value:
 				previous_value = cur_pre_val
-		if(previous_value == ""):
-			previous_value = row.voucher_no	
+		if previous_value == "":
+			previous_value = row.voucher_no
 
-		if(current_value == previous_value):
+		if current_value == previous_value:
 			total_qty1 += row.qty
 			total_boxes1 += row.boxes
 			total_debit1 += row.debit
-			total_credit1 += row.credit	
+			total_credit1 += row.credit
 
-		if(current_value != "" and previous_value != ""):
-			if(current_value != previous_value):
+		if current_value != "" and previous_value != "":
+			if current_value != previous_value:
 				subTotal()
 				previous_value = ""
 				cur_pre_val = row.voucher_no
@@ -328,7 +366,7 @@ def get_data(filters):
 			"po_no": row.po_number,
 			"fax_no": row.fax_no,
 			"item_code": row.item_code,
-			"size": frappe.db.get_value("Item",row.item_code,"size"),
+			"size": frappe.db.get_value("Item", row.item_code, "size"),
 			"qty": row.qty,
 			"boxes": row.boxes,
 			"rate": row.rate,
@@ -339,7 +377,8 @@ def get_data(filters):
 			
 		}
 		data.append(row)
-		if(i==0):
+		if i == 0:
 			subTotal()
+			taxAmount(filters)
 			gTotal()
 	return data
