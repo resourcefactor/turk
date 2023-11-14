@@ -118,6 +118,7 @@ def get_data(filters):
 			so.name as voucher_no,
 			so.shipment_no,
 			so.po_number,
+			so.discount_amount,
 			soi.fax_no,
 			soi.item_code,
 			soi.item_name,
@@ -137,6 +138,7 @@ def get_data(filters):
 			pe.name as voucher_no,
 			'',
 			'',
+			0,
 			'',
 			'',
 			'',
@@ -155,6 +157,7 @@ def get_data(filters):
 			je.name as voucher_no,
 			'',
 			'',
+			0,
 			'',
 			'',
 			'',
@@ -185,7 +188,8 @@ def get_data(filters):
 			poi.rate,
 			0 as debit,
 			poi.amount as credit,
-			po.remarks
+			po.remarks,
+			po.discount_amount
 			from `tabPurchase Invoice` as po
 			left join `tabPurchase Invoice Item` as poi on po.name = poi.parent
 			where po.docstatus = 1 and po.supplier = '{0}' and po.posting_date >= '{1}' and po.posting_date <= '{2}' 
@@ -204,7 +208,8 @@ def get_data(filters):
 			0,
 			pe.paid_amount as debit,
 			0 as credit,
-			pe.remarks
+			pe.remarks,
+			0
 			from `tabPayment Entry` as pe
 			where pe.docstatus = 1 and pe.party_type = 'Supplier' and pe.party = '{0}' and pe.posting_date >= '{1}' and pe.posting_date <= '{2}'
 		union all
@@ -222,7 +227,8 @@ def get_data(filters):
 			0,
 			jea.debit,
 			jea.credit,
-			je.remark as remarks
+			je.remark as remarks,
+			0
 			from `tabJournal Entry` as je
 			left join `tabJournal Entry Account` as jea on je.name = jea.parent
 			where je.docstatus = 1 and jea.party_type = 'Supplier' and jea.party = '{0}' and je.posting_date >= '{1}' and je.posting_date <= '{2}'
@@ -242,8 +248,29 @@ def get_data(filters):
 	total_boxes1 = 0
 	total_debit1 = 0
 	total_credit1 = 0
+	total_discount1 = 0
 
 	i = len(result)
+
+	def discountTotal(filters):
+		total_row = {
+			"date": "",
+			"voucher_type": "",
+			"voucher_no": "",
+			"shipment_no": "",
+			"po_no": "",
+			"fax_no": "",
+			"item_code": "Discounted Total",
+			"size": "",
+			"qty": "",
+			"boxes": "",
+			"rate": "",
+			"debit": 0 if filters.get('party_type') == "Customer" else total_discount1,
+			"credit": total_discount1 if filters.get('party_type') == "Customer" else 0,
+			"balance": "",
+			"remarks": ""
+		}
+		data.append(total_row)
 
 	def subTotal():
 		total_row = {
@@ -258,8 +285,8 @@ def get_data(filters):
 			"qty": total_qty1,
 			"boxes": total_boxes1,
 			"rate": "",
-			"debit": total_debit1,
-			"credit": total_credit1,
+			"debit": total_debit1 if filters.get('party_type') == "Customer" else total_debit1 + total_discount1,
+			"credit": total_credit1 + total_discount1 if filters.get('party_type') == "Customer" else total_credit1,
 			"balance": "",
 			"remarks": ""
 		}
@@ -285,44 +312,8 @@ def get_data(filters):
 		}
 		data.append(total_row1)
 
-	def taxAmount(filters):
-		if filters.get('party_type') == "Customer":
-			taxResult = frappe.db.sql("""select
-				0 as debit,
-				sum(so.discount_amount) as credit
-				from `tabSales Invoice` as so
-				where so.docstatus = 1 and so.customer = '{0}' and so.posting_date >= '{1}' and so.posting_date <= '{2}'
-			""".format(filters.get('party'), filters.get('from_date'), filters.get('to_date')), as_dict=True)
-		elif filters.get('party_type') == "Supplier":
-			taxResult = frappe.db.sql("""select
-				sum(so.discount_amount) as debit,
-				0 as credit
-				from `tabPurchase Invoice` as so
-				where so.docstatus = 1 and so.supplier = '{0}' and so.posting_date >= '{1}' and so.posting_date <= '{2}'
-			""".format(filters.get('party'), filters.get('from_date'), filters.get('to_date')), as_dict=True)
-
-		for res in taxResult:
-			total_row2 = {
-				"date": "",
-				"voucher_type": "",
-				"voucher_no": "",
-				"shipment_no": "",
-				"po_no": "",
-				"fax_no": "",
-				"item_code": "Discounted Amount",
-				"size": "",
-				"qty": "",
-				"boxes": "",
-				"rate": "",
-				"debit": res.debit,
-				"credit": res.credit,
-				"balance": "",
-				"remarks": ""
-			}
-			data.append(total_row2)
-
 	balance1 = 0
-	
+
 	for row in result:
 		i = i - 1
 
@@ -338,9 +329,11 @@ def get_data(filters):
 			total_boxes1 += row.boxes
 			total_debit1 += row.debit
 			total_credit1 += row.credit
+			total_discount1 = row.discount_amount
 
 		if current_value != "" and previous_value != "":
 			if current_value != previous_value:
+				discountTotal(filters)
 				subTotal()
 				previous_value = ""
 				cur_pre_val = row.voucher_no
@@ -348,6 +341,7 @@ def get_data(filters):
 				total_boxes1 = row.boxes
 				total_debit1 = row.debit
 				total_credit1 = row.credit
+				total_discount1 = row.discount_amount
 
 		row.balance = row.debit - row.credit
 		balance1 += row.balance
@@ -373,12 +367,11 @@ def get_data(filters):
 			"debit": row.debit,
 			"credit": row.credit,
 			"balance": balance1,
-			"remarks": row.remarks,
-			
+			"remarks": row.remarks
 		}
 		data.append(row)
 		if i == 0:
+			discountTotal(filters)
 			subTotal()
-			taxAmount(filters)
 			gTotal()
 	return data
