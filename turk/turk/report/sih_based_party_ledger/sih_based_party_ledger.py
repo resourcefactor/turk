@@ -249,6 +249,7 @@ def get_data(filters):
 	total_debit1 = 0
 	total_credit1 = 0
 	total_discount1 = 0
+	discBalance = 0
 
 	i = len(result)
 
@@ -267,7 +268,7 @@ def get_data(filters):
 			"rate": "",
 			"debit": 0 if filters.get('party_type') == "Customer" else total_discount1,
 			"credit": total_discount1 if filters.get('party_type') == "Customer" else 0,
-			"balance": "",
+			"balance": discBalance,
 			"remarks": ""
 		}
 		data.append(total_row)
@@ -330,6 +331,8 @@ def get_data(filters):
 			total_debit1 += row.debit
 			total_credit1 += row.credit
 			total_discount1 = row.discount_amount
+			row.balance = row.debit - row.credit if filters.get('party_type') == 'Customer' else row.credit - row.debit
+			discBalance += row.balance - total_discount1
 
 		if current_value != "" and previous_value != "":
 			if current_value != previous_value:
@@ -342,6 +345,8 @@ def get_data(filters):
 				total_debit1 = row.debit
 				total_credit1 = row.credit
 				total_discount1 = row.discount_amount
+				row.balance = row.debit - row.credit if filters.get('party_type') == 'Customer' else row.credit - row.debit
+				discBalance += row.balance - total_discount1
 
 		row.balance = row.debit - row.credit
 		balance1 += row.balance
