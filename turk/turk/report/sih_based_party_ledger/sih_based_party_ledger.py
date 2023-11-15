@@ -348,7 +348,7 @@ def get_data(filters):
 				row.balance = row.debit - row.credit if filters.get('party_type') == 'Customer' else row.credit - row.debit
 				discBalance += row.balance - total_discount1
 
-		row.balance = row.debit - row.credit
+		row.balance = row.debit - row.credit - total_discount1
 		balance1 += row.balance
 
 		total_debit += row.debit
