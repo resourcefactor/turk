@@ -213,7 +213,7 @@ def get_data(filters):
 			from `tabPayment Entry` as pe
 			where pe.docstatus = 1 and pe.party_type = 'Supplier' and pe.party = '{0}' and pe.posting_date >= '{1}' and pe.posting_date <= '{2}'
 		union all
-		select 
+		select
 			je.posting_date as date,
 			je.voucher_type,
 			je.name as voucher_no,
@@ -268,7 +268,7 @@ def get_data(filters):
 			"rate": "",
 			"debit": 0 if filters.get('party_type') == "Customer" else total_discount1,
 			"credit": total_discount1 if filters.get('party_type') == "Customer" else 0,
-			"balance": discBalance,
+			"balance": total_debit1 + total_discount1 if filters.get('party_type') == "Customer" else total_credit1 + total_discount1,
 			"remarks": ""
 		}
 		data.append(total_row)
@@ -331,8 +331,6 @@ def get_data(filters):
 			total_debit1 += row.debit
 			total_credit1 += row.credit
 			total_discount1 = row.discount_amount
-			row.balance = row.debit - row.credit if filters.get('party_type') == 'Customer' else row.credit - row.debit
-			discBalance += row.balance - total_discount1
 
 		if current_value != "" and previous_value != "":
 			if current_value != previous_value:
@@ -345,10 +343,9 @@ def get_data(filters):
 				total_debit1 = row.debit
 				total_credit1 = row.credit
 				total_discount1 = row.discount_amount
-				row.balance = row.debit - row.credit if filters.get('party_type') == 'Customer' else row.credit - row.debit
-				discBalance += row.balance - total_discount1
+				row.balance = row.debit - row.credit - total_discount1 if filters.get('party_type') == 'Customer' else row.credit - row.debit + total_discount1
 
-		row.balance = row.debit - row.credit - total_discount1
+		row.balance = row.debit - row.credit
 		balance1 += row.balance
 
 		total_debit += row.debit
