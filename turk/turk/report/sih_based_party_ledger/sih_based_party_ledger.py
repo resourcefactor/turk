@@ -249,11 +249,15 @@ def get_data(filters):
 	total_debit1 = 0
 	total_credit1 = 0
 	total_discount1 = 0
-	discBalance = 0
+
+	balance2 = 0
 
 	i = len(result)
 
-	def discountTotal(filters):
+	def discTotal(voucher_type=None):
+		i = False
+		if voucher_type and voucher_type in '(Purchase Invoice, Sales Invoice)':
+			i = True
 		total_row = {
 			"date": "",
 			"voucher_type": "",
@@ -261,14 +265,14 @@ def get_data(filters):
 			"shipment_no": "",
 			"po_no": "",
 			"fax_no": "",
-			"item_code": "Discounted Total",
+			"item_code": "<b>Total Discount</b>",
 			"size": "",
 			"qty": "",
 			"boxes": "",
 			"rate": "",
-			"debit": 0 if filters.get('party_type') == "Customer" else total_discount1,
-			"credit": total_discount1 if filters.get('party_type') == "Customer" else 0,
-			"balance": total_debit1 + total_discount1 if filters.get('party_type') == "Customer" else total_credit1 + total_discount1,
+			"debit": "",  # total_debit1,
+			"credit": ((total_credit1 + total_discount1) if total_discount1 else 0) if i else 0,
+			"balance": ((balance1 - total_credit1 - total_discount1) if total_discount1 else 0) if i else 0,
 			"remarks": ""
 		}
 		data.append(total_row)
@@ -286,8 +290,8 @@ def get_data(filters):
 			"qty": total_qty1,
 			"boxes": total_boxes1,
 			"rate": "",
-			"debit": total_debit1 if filters.get('party_type') == "Customer" else total_debit1 + total_discount1,
-			"credit": total_credit1 + total_discount1 if filters.get('party_type') == "Customer" else total_credit1,
+			"debit": total_debit1,
+			"credit": total_credit1,
 			"balance": "",
 			"remarks": ""
 		}
@@ -331,10 +335,11 @@ def get_data(filters):
 			total_debit1 += row.debit
 			total_credit1 += row.credit
 			total_discount1 = row.discount_amount
+			balance2 = None
 
 		if current_value != "" and previous_value != "":
 			if current_value != previous_value:
-				discountTotal(filters)
+				discTotal(row.voucher_type)
 				subTotal()
 				previous_value = ""
 				cur_pre_val = row.voucher_no
@@ -342,10 +347,10 @@ def get_data(filters):
 				total_boxes1 = row.boxes
 				total_debit1 = row.debit
 				total_credit1 = row.credit
-				total_discount1 = row.discount_amount
-				row.balance = row.debit - row.credit - total_discount1 if filters.get('party_type') == 'Customer' else row.credit - row.debit + total_discount1
+				balance2 = row.discount_amount
+				# total_discount1 = row.discount
 
-		row.balance = row.debit - row.credit
+		row.balance = row.debit - row.credit - (balance2 if balance2 else 0)
 		balance1 += row.balance
 
 		total_debit += row.debit
@@ -354,7 +359,7 @@ def get_data(filters):
 		total_boxes += float(row.boxes)
 		total_qty += float(row.qty)
 
-		row = {
+		row3 = {
 			"date": row.date,
 			"voucher_type": row.voucher_type,
 			"voucher_no": row.voucher_no,
@@ -368,12 +373,12 @@ def get_data(filters):
 			"rate": row.rate,
 			"debit": row.debit,
 			"credit": row.credit,
-			"balance": balance1,
+			"balance": balance1,  #- (balance2 if balance2 else 0),
 			"remarks": row.remarks
 		}
-		data.append(row)
+		data.append(row3)
 		if i == 0:
-			discountTotal(filters)
+			discTotal(row.voucher_type)
 			subTotal()
 			gTotal()
 	return data
