@@ -53,9 +53,8 @@ def get_columns():
 		},
 		{
 			"fieldname": "item_code",
-			"fieldtype": "Link",
+			"fieldtype": "Data",
 			"label": "Item Code",
-			"options": "Item",
 			"width": 150
 		},
 		{
@@ -237,148 +236,104 @@ def get_data(filters):
 	result = frappe.db.sql(query, as_dict=True)
 	data = []
 
-	total_qty = 0
-	total_boxes = 0
-	total_debit = 0
-	total_credit = 0
-	current_value = ""
-	previous_value = ""
-	cur_pre_val = ""
-	total_qty1 = 0
-	total_boxes1 = 0
-	total_debit1 = 0
-	total_credit1 = 0
-	total_discount1 = 0
+	item_details = {}
 
-	balance2 = 0
+	for res in result:
+		item_details.setdefault((res.voucher_type, res.voucher_no), []).append(res)
 
-	i = len(result)
+	m_total_qty = m_total_boxes = m_total_debit = m_total_credit = c_balance = 0
 
-	def discTotal(voucher_type=None):
-		i = False
-		if voucher_type and voucher_type in '(Purchase Invoice, Sales Invoice)':
-			i = True
-		total_row = {
+	data = []
+	for key in item_details.keys():
+		voucher_type = key[0]
+		voucher_no = key[1]
+
+		s_total_qty = s_total_boxes = s_total_debit = s_total_credit = 0
+
+		for d in item_details[key]:
+			s_total_qty += d.qty
+			s_total_boxes += d.boxes
+			s_total_debit += d.debit
+			s_total_credit += d.credit
+			c_balance += (d.debit - d.credit)
+
+			m_total_qty += d.qty
+			m_total_boxes += d.boxes
+			m_total_debit += d.debit
+			m_total_credit += c_balance
+
+			data.append({
+				"date": d.date,
+				"voucher_type": d.voucher_type,
+				"voucher_no": d.voucher_no,
+				"shipment_no": d.shipment_no,
+				"po_no": d.po_number,
+				"fax_no": d.fax_no,
+				"item_code": d.item_code,
+				"size": frappe.db.get_value("Item", d.item_code, "size"),
+				"qty": d.qty,
+				"boxes": d.boxes,
+				"rate": d.rate,
+				"debit": d.debit,
+				"credit": d.credit,
+				"balance": c_balance,
+				"remarks": d.remarks
+			})
+		if voucher_type in ["Purchase Invoice", "Sales Invoice"]:
+			v_doc = frappe.get_doc(voucher_type, voucher_no)
+			if v_doc.discount_amount > 0:
+				c_balance -= v_doc.discount_amount
+				data.append({
+					"date": "",
+					"voucher_type": "",
+					"voucher_no": "",
+					"shipment_no": "",
+					"po_no": "",
+					"fax_no": "",
+					"item_code": "<b>Discounted Amount</b>",
+					"size": "",
+					"qty": 0,
+					"boxes": 0,
+					"rate": 0,
+					"debit": 0,
+					"credit": v_doc.discount_amount,
+					"balance": c_balance,
+					"remarks": ""
+				})
+		data.append({
 			"date": "",
 			"voucher_type": "",
 			"voucher_no": "",
 			"shipment_no": "",
 			"po_no": "",
 			"fax_no": "",
-			"item_code": "<b>Total Discount</b>",
+			"item_code": "<b>Sub Total<b>",
 			"size": "",
-			"qty": "",
-			"boxes": "",
+			"qty": s_total_qty,
+			"boxes": s_total_boxes,
 			"rate": "",
-			"debit": "",  # total_debit1,
-			"credit": ((total_credit1 + total_discount1) if total_discount1 else 0) if i else 0,
-			"balance": ((balance1 - total_credit1 - total_discount1) if total_discount1 else 0) if i else 0,
-			"remarks": ""
-		}
-		data.append(total_row)
-
-	def subTotal():
-		total_row = {
-			"date": "",
-			"voucher_type": "",
-			"voucher_no": "",
-			"shipment_no": "",
-			"po_no": "",
-			"fax_no": "",
-			"item_code": "Sub Total",
-			"size": "",
-			"qty": total_qty1,
-			"boxes": total_boxes1,
-			"rate": "",
-			"debit": total_debit1,
-			"credit": total_credit1,
+			"debit": s_total_debit,
+			"credit": s_total_credit,
 			"balance": "",
 			"remarks": ""
-		}
-		data.append(total_row)
-
-	def gTotal():
-		total_row1 = {
+		})
+	if data:
+		data.append({
 			"date": "",
 			"voucher_type": "",
 			"voucher_no": "",
 			"shipment_no": "",
 			"po_no": "",
 			"fax_no": "",
-			"item_code": "Grand Total",
+			"item_code": "<b>Grand Total<b>",
 			"size": "",
-			"qty": total_qty,
-			"boxes": total_boxes,
+			"qty": m_total_qty,
+			"boxes": m_total_boxes,
 			"rate": "",
-			"debit": total_debit,
-			"credit": total_credit,
+			"debit": m_total_debit,
+			"credit": m_total_credit,
 			"balance": "",
 			"remarks": ""
-		}
-		data.append(total_row1)
+		})
 
-	balance1 = 0
-
-	for row in result:
-		i = i - 1
-
-		current_value = row.voucher_no
-		if cur_pre_val != "":
-			if cur_pre_val != current_value:
-				previous_value = cur_pre_val
-		if previous_value == "":
-			previous_value = row.voucher_no
-
-		if current_value == previous_value:
-			total_qty1 += row.qty
-			total_boxes1 += row.boxes
-			total_debit1 += row.debit
-			total_credit1 += row.credit
-			total_discount1 = row.discount_amount
-			balance2 = None
-
-		if current_value != "" and previous_value != "":
-			if current_value != previous_value:
-				discTotal(row.voucher_type)
-				subTotal()
-				previous_value = ""
-				cur_pre_val = row.voucher_no
-				total_qty1 = row.qty
-				total_boxes1 = row.boxes
-				total_debit1 = row.debit
-				total_credit1 = row.credit
-				balance2 = row.discount_amount
-				# total_discount1 = row.discount
-
-		row.balance = row.debit - row.credit - (balance2 if balance2 else 0)
-		balance1 += row.balance
-
-		total_debit += row.debit
-		total_credit += row.credit
-
-		total_boxes += float(row.boxes)
-		total_qty += float(row.qty)
-
-		row3 = {
-			"date": row.date,
-			"voucher_type": row.voucher_type,
-			"voucher_no": row.voucher_no,
-			"shipment_no": row.shipment_no,
-			"po_no": row.po_number,
-			"fax_no": row.fax_no,
-			"item_code": row.item_code,
-			"size": frappe.db.get_value("Item", row.item_code, "size"),
-			"qty": row.qty,
-			"boxes": row.boxes,
-			"rate": row.rate,
-			"debit": row.debit,
-			"credit": row.credit,
-			"balance": balance1,  #- (balance2 if balance2 else 0),
-			"remarks": row.remarks
-		}
-		data.append(row3)
-		if i == 0:
-			discTotal(row.voucher_type)
-			subTotal()
-			gTotal()
 	return data
