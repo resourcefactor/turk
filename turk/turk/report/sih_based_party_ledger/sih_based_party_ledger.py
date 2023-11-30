@@ -282,7 +282,10 @@ def get_data(filters):
 		if voucher_type in ["Purchase Invoice", "Sales Invoice"]:
 			v_doc = frappe.get_doc(voucher_type, voucher_no)
 			if v_doc.discount_amount > 0:
-				c_balance -= v_doc.discount_amount
+				if filters.get('party_type') == 'Supplier':
+					c_balance += v_doc.discount_amount
+				elif filters.get('party_type') == 'Customer':
+					c_balance -= v_doc.discount_amount
 				data.append({
 					"date": "",
 					"voucher_type": "",
