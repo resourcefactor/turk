@@ -260,7 +260,7 @@ def get_data(filters):
 			m_total_qty += d.qty
 			m_total_boxes += d.boxes
 			m_total_debit += d.debit
-			m_total_credit += c_balance
+			m_total_credit += d.credit
 
 			data.append({
 				"date": d.date,
@@ -286,6 +286,7 @@ def get_data(filters):
 					c_balance += v_doc.discount_amount
 				elif filters.get('party_type') == 'Customer':
 					c_balance -= v_doc.discount_amount
+				m_total_credit += v_doc.discount_amount
 				data.append({
 					"date": "",
 					"voucher_type": "",
