@@ -3,7 +3,7 @@ frappe.provide("turk");
 
 frappe.ui.form.on("Sales Invoice", "onload", function (frm, cdt, cdn) {
 	if (frm.doc.docstatus == 0) {
-		if (frm.doc.is_return == 1) { frm.set_df_property("update_stock", "read_only", 1); }
+		// if (frm.doc.is_return == 1) { frm.set_df_property("update_stock", "read_only", 1); }
 	//	frm.get_field("custom_delivery_warehouse").get_query = function (doc, cdt, cdn) {
 	//		return {
 	//			filters: { 'company': doc.company }
