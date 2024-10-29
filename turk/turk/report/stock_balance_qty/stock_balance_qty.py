@@ -30,6 +30,10 @@ def execute(filters=None):
     for company, item, warehouse in sorted(iwb_map):
         if item_map.get(item):
             qty_dict = iwb_map[(company, item, warehouse)]
+
+            boxes = 0
+            pieces = 0
+
             if qty_dict.bal_qty:
                 item_doc = frappe.get_doc("Item", item)
                 boxes, pieces = calculate_boxes_and_pieces(

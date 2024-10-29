@@ -5,49 +5,71 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 
+
 def execute(filters=None):
-	columns = get_columns()
-	items = get_items(filters)
-	sl_entries = get_stock_ledger_entries(filters, items)
-	item_details = get_item_details(items, sl_entries)
-	opening_row = get_opening_balance(filters, columns)
+    columns = get_columns()
+    items = get_items(filters)
+    sl_entries = get_stock_ledger_entries(filters, items)
+    item_details = get_item_details(items, sl_entries)
+    opening_row = get_opening_balance(filters, columns)
 
-	data = []
-	if opening_row:
-		data.append(opening_row)
-	if item_details:
-		for sle in sl_entries:
-			item_detail = item_details[sle.item_code]
+    data = []
+    if opening_row:
+        data.append(opening_row)
+    if item_details:
+        for sle in sl_entries:
+            item_detail = item_details[sle.item_code]
 
-			boxes = 1
-			pieces = 1
-			if item_detail["boxes"] == boxes:
-				boxes = sle.actual_qty
-			else:
-				boxes = sle.actual_qty/item_detail["boxes"]
+            boxes = 0
+            pieces = 0
 
-			if item_detail["pieces"] == pieces:
-				pieces = 0
-			else:
-				pieces = (sle.actual_qty/(item_detail["boxes"]/item_detail["pieces"]))%item_detail["pieces"]
-				if sle.actual_qty < 0:
-					pieces = pieces * -1
+            if sle.actual_qty:
+                item_doc = frappe.get_doc("Item", sle.item_code)
+                boxes, pieces = calculate_boxes_and_pieces(
+                    sle.actual_qty, item_doc.boxes, item_doc.pieces
+                )
 
+            # boxes = 1
+            # pieces = 1
+            # if item_detail["boxes"] == boxes:
+            #     boxes = sle.actual_qty
+            # else:
+            #     boxes = sle.actual_qty / item_detail["boxes"]
 
-			data.append([sle.date, sle.item_code, item_detail.item_name, item_detail.item_group,
-				item_detail.brand,
-			#	item_detail.description,
-				sle.warehouse,
-				item_detail.stock_uom, sle.actual_qty,
-				boxes, pieces,
-				sle.qty_after_transaction,
-			#	(sle.incoming_rate if sle.actual_qty > 0 else 0.0),
-			#	sle.valuation_rate, sle.stock_value,
-				sle.voucher_type, sle.voucher_no,
-			#	sle.batch_no, sle.serial_no, sle.project,
-				sle.company])
+            # if item_detail["pieces"] == pieces:
+            #     pieces = 0
+            # else:
+            #     pieces = (
+            #         sle.actual_qty / (item_detail["boxes"] / item_detail["pieces"])
+            #     ) % item_detail["pieces"]
+            #     if sle.actual_qty < 0:
+            #         pieces = pieces * -1
 
-	return columns, data
+            data.append(
+                [
+                    sle.date,
+                    sle.item_code,
+                    item_detail.item_name,
+                    item_detail.item_group,
+                    item_detail.brand,
+                    # item_detail.description,
+                    sle.warehouse,
+                    item_detail.stock_uom,
+                    sle.actual_qty,
+                    boxes,
+                    pieces,
+                    sle.qty_after_transaction,
+                    # (sle.incoming_rate if sle.actual_qty > 0 else 0.0),
+                    # sle.valuation_rate, sle.stock_value,
+                    sle.voucher_type,
+                    sle.voucher_no,
+                    # sle.batch_no, sle.serial_no, sle.project,
+                    sle.company,
+                ]
+            )
+
+    return columns, data
+
 
 def get_columns():
 	columns = [
@@ -80,6 +102,7 @@ def get_columns():
 
 	return columns
 
+
 def get_stock_ledger_entries(filters, items):
 	item_conditions_sql = ''
 	if items:
@@ -100,6 +123,7 @@ def get_stock_ledger_entries(filters, items):
 			item_conditions_sql = item_conditions_sql
 		), filters, as_dict=1)
 
+
 def get_items(filters):
 	conditions = []
 	if filters.get("item_code"):
@@ -115,6 +139,7 @@ def get_items(filters):
 		items = frappe.db.sql_list("""select name from `tabItem` item where {}"""
 			.format(" and ".join(conditions)), filters)
 	return items
+
 
 def get_item_details(items, sl_entries):
 	item_details = {}
@@ -132,6 +157,7 @@ def get_item_details(items, sl_entries):
 
 	return item_details
 
+
 def get_sle_conditions(filters):
 	conditions = []
 	if filters.get("warehouse"):
@@ -146,6 +172,7 @@ def get_sle_conditions(filters):
 		conditions.append("project=%(project)s")
 
 	return "and {}".format(" and ".join(conditions)) if conditions else ""
+
 
 def get_opening_balance(filters, columns):
 	if not (filters.item_code and filters.warehouse and filters.from_date):
@@ -165,6 +192,7 @@ def get_opening_balance(filters, columns):
 
 	return row
 
+
 def get_warehouse_condition(warehouse):
 	warehouse_details = frappe.db.get_value("Warehouse", warehouse, ["lft", "rgt"], as_dict=1)
 	if warehouse_details:
@@ -174,6 +202,7 @@ def get_warehouse_condition(warehouse):
 
 	return ''
 
+
 def get_item_group_condition(item_group):
 	item_group_details = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"], as_dict=1)
 	if item_group_details:
@@ -182,3 +211,25 @@ def get_item_group_condition(item_group):
 			item_group_details.rgt)
 
 	return ''
+
+
+def calculate_boxes_and_pieces(total_sqm, sqm_per_box, pieces_per_box):
+    # Calculate total full boxes needed
+    boxes = int(total_sqm // sqm_per_box)
+
+    # Calculate remaining sqm after full boxes
+    remaining_sqm = total_sqm % sqm_per_box
+
+    # Calculate the number of loose pieces if there is any remaining sqm
+    pieces = (
+        round((remaining_sqm / sqm_per_box) * pieces_per_box)
+        if remaining_sqm > 0
+        else 0
+    )
+
+    # Check if the loose pieces fill an entire box
+    if pieces == pieces_per_box:
+        boxes += 1
+        pieces = 0  # Reset loose pieces if they form a full box
+
+    return boxes, pieces
