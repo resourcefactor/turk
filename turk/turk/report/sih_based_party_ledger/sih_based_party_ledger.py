@@ -281,29 +281,29 @@ def get_data(filters):
 			})
 		if voucher_type in ["Purchase Invoice", "Sales Invoice"]:
 			v_doc = frappe.get_doc(voucher_type, voucher_no)
-			if v_doc.discount_amount > 0:
-				if filters.get('party_type') == 'Supplier':
-					c_balance += v_doc.discount_amount
-				elif filters.get('party_type') == 'Customer':
-					c_balance -= v_doc.discount_amount
-				m_total_credit += v_doc.discount_amount
-				data.append({
-					"date": "",
-					"voucher_type": "",
-					"voucher_no": "",
-					"shipment_no": "",
-					"po_no": "",
-					"fax_no": "",
-					"item_code": "<b>Discounted Amount</b>",
-					"size": "",
-					"qty": 0,
-					"boxes": 0,
-					"rate": 0,
-					"debit": 0,
-					"credit": v_doc.discount_amount,
-					"balance": c_balance,
-					"remarks": ""
-				})
+			# if v_doc.discount_amount > 0:
+			if filters.get('party_type') == 'Supplier':
+				c_balance += v_doc.discount_amount
+			elif filters.get('party_type') == 'Customer':
+				c_balance -= v_doc.discount_amount
+			m_total_credit += v_doc.discount_amount
+			data.append({
+				"date": "",
+				"voucher_type": "",
+				"voucher_no": "",
+				"shipment_no": "",
+				"po_no": "",
+				"fax_no": "",
+				"item_code": "<b>Discounted Amount</b>",
+				"size": "",
+				"qty": 0,
+				"boxes": 0,
+				"rate": 0,
+				"debit": 0,
+				"credit": v_doc.discount_amount,
+				"balance": c_balance,
+				"remarks": ""
+			})
 		data.append({
 			"date": "",
 			"voucher_type": "",
