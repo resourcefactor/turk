@@ -123,28 +123,29 @@ function get_approval_limit(crow) {
 	})
 }
 
-turk.selling.SalesOrderController = erpnext.selling.SalesOrderController.extend({
-	onload: function (doc, dt, dn) {
+
+turk.selling.SalesOrderController = class SalesOrderController extends erpnext.selling.SalesOrderController{
+	onload(doc, dt, dn) {
 		this._super();
-	},
+	}
 	
-	refresh: function (doc, dt, dn) {
+	refresh (doc, dt, dn) {
 		this._super(doc);
 		var me = this;
 		let allow_delivery = false;
 		me.make_sales_invoice = this.ts_make_sales_invoice
 		me.make_material_request = this.ts_make_material_request;
 		me.make_delivery_note_based_on_delivery_date = this.ts_make_delivery_note_based_on_delivery_date;
-	},
+	}
 	ts_make_sales_invoice() {
 		this.check_allow_delivery(this.frm, "Sales Invoice");
-	},
+	}
 	ts_make_material_request() {
 		this.check_allow_delivery(this.frm, "Material Request");
-	},
+	}
 	ts_make_delivery_note_based_on_delivery_date() {
 		this.check_allow_delivery(this.frm, "Delivery Note");
-	},
+	}
 	check_allow_delivery(frm, to_create) {
 		var me = this;
 		frappe.call({
@@ -173,8 +174,8 @@ turk.selling.SalesOrderController = erpnext.selling.SalesOrderController.extend(
 				}
 			}
 		});
-	},
-	create_new_delivery_delivery_note: function () {
+	}
+	create_new_delivery_delivery_note () {
 		var me = this;
 
 		var delivery_dates = [];
@@ -233,13 +234,13 @@ turk.selling.SalesOrderController = erpnext.selling.SalesOrderController.extend(
 		} else {
 			this.new_delivery_note();
 		}
-	},
-	new_delivery_note: function () {
+	}
+	new_delivery_note () {
 		frappe.model.open_mapped_doc({
 			method: "erpnext.selling.doctype.sales_order.sales_order.make_delivery_note",
 			frm: me.frm
 		})
 	}
-});
+};
 
 $.extend(cur_frm.cscript, new turk.selling.SalesOrderController({ frm: cur_frm }));
