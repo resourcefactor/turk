@@ -93,8 +93,8 @@ function CalculateSQM(crow, field, cdt, cdn) {
 // 	return ret_obj;
 // }
 
-turk.buying.PurchaseOrderController = erpnext.buying.PurchaseOrderController.extend({
-	refresh: function (doc, cdt, cdn) {
+turk.buying.PurchaseOrderController = class PurchaseOrderController extends erpnext.buying.PurchaseOrderController{
+	refresh (doc, cdt, cdn) {
 		this._super(doc);
 		var allow_receipt = false;
 		var is_drop_ship = false;
@@ -126,14 +126,14 @@ turk.buying.PurchaseOrderController = erpnext.buying.PurchaseOrderController.ext
 		if (cint(doc.docstatus==0) && cur_frm.page.current_view_name!=="pos" && !doc.is_return) {
 			this.frm.cscript.sales_order_btn();
 		}
-	},
-	ts_make_purchase_receipt: function () {
+	}
+	ts_make_purchase_receipt () {
 		frappe.model.open_mapped_doc({
 			method: "turk.utils.ts_make_purchase_receipt",
 			frm: cur_frm
 		})
-	},
-	sales_order_btn: function() {
+	}
+	sales_order_btn() {
 		var me = this;
 		this.$sales_order_btn = this.frm.add_custom_button(__('Sales Order'),
 			function() {
@@ -174,6 +174,6 @@ turk.buying.PurchaseOrderController = erpnext.buying.PurchaseOrderController.ext
 	// 			})
 	// 		}, __("Get items from"));
 	// 	}
-	});
+	};
 
 $.extend(cur_frm.cscript, new turk.buying.PurchaseOrderController({ frm: cur_frm }));

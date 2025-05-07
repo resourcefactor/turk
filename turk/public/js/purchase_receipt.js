@@ -18,24 +18,24 @@ frappe.ui.form.on("Purchase Receipt", "validate", function (frm, cdt, cdn) {
 		// var ret_obj = setseries(frm.doc.company);
 		// frm.set_value("naming_series", ret_obj.series);
 		CalculateBreakage(frm);
-		$.each(frm.doc.items || [], function (i, d) {
-			frappe.call({
-				method: "frappe.client.get",
-				args: {
-					doctype: "User",
-					filters: { "name": frappe.session.user },
-					fieldname: "user_warehouse"
-				},
-				callback: function (r) {
-					if (r.message.user_warehouse) {
-						d.warehouse = r.message.user_warehouse;
-					}
-					if (d.rejected_qty > 0) {
-						d.rejected_warehouse = r.message.user_warehouse.replace("Normal", "Breakage");
-					}
-				}
-			})
-		});
+		// $.each(frm.doc.items || [], function (i, d) {
+		// 	frappe.call({
+		// 		method: "frappe.client.get",
+		// 		args: {
+		// 			doctype: "User",
+		// 			filters: { "name": frappe.session.user },
+		// 			fieldname: "user_warehouse"
+		// 		},
+		// 		callback: function (r) {
+		// 			if (r.message.user_warehouse) {
+		// 				d.warehouse = r.message.user_warehouse;
+		// 			}
+		// 			if (d.rejected_qty > 0) {
+		// 				d.rejected_warehouse = r.message.user_warehouse.replace("Normal", "Breakage");
+		// 			}
+		// 		}
+		// 	})
+		// });
 		//calculate_total_boxes(frm);
 	}
 });
@@ -45,20 +45,20 @@ frappe.ui.form.on("Purchase Receipt", "onload", function (frm, cdt, cdn) {
 		$.each(frm.doc.items || [], function (i, d) {
 			if (d.qty != d.sqm && d.item_code != 'undefined') { CalculateSQM(d, "received_qty", cdt, cdn); }
 		})
-		$.each(frm.doc.items || [], function (i, d) {
-			frappe.call({
-				method: "frappe.client.get",
-				args: {
-					doctype: "User",
-					filters: { "name": frappe.session.user },
-					fieldname: "user_warehouse"
-				},
-				callback: function (r) {
-					if (r.message.user_warehouse) { d.warehouse = r.message.user_warehouse; }
-					d.rejected_warehouse = r.message.user_warehouse.replace("Normal", "Breakage");
-				}
-			})
-		})
+		// $.each(frm.doc.items || [], function (i, d) {
+		// 	frappe.call({
+		// 		method: "frappe.client.get",
+		// 		args: {
+		// 			doctype: "User",
+		// 			filters: { "name": frappe.session.user },
+		// 			fieldname: "user_warehouse"
+		// 		},
+		// 		callback: function (r) {
+		// 			if (r.message.user_warehouse) { d.warehouse = r.message.user_warehouse; }
+		// 			d.rejected_warehouse = r.message.user_warehouse.replace("Normal", "Breakage");
+		// 		}
+		// 	})
+		// })
 		frm.refresh_field("items");
 	}
 });
@@ -170,8 +170,8 @@ function CalculateBreakage(frm) {
 	//frm.set_value('charge_to_company', total_breakage - frm.doc.charge_to_supplier);
 }
 
-turk.stock.PurchaseReceiptController = erpnext.stock.PurchaseReceiptController.extend({
-	refresh: function () {
+turk.stock.PurchaseReceiptController = class PurchaseReceiptController extends erpnext.stock.PurchaseReceiptController{
+	refresh () {
 		this._super();
 		if (!this.frm.doc.is_return && this.frm.doc.status != "Closed") {
 			if (this.frm.doc.docstatus == 0) {
@@ -197,6 +197,6 @@ turk.stock.PurchaseReceiptController = erpnext.stock.PurchaseReceiptController.e
 			}
 		}
 	}
-});
+};
 
 $.extend(cur_frm.cscript, new turk.stock.PurchaseReceiptController({ frm: cur_frm }));
