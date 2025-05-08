@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-07 12:41:58.219699",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rebate_and_discount_section",
+  "enable_rebate_and_discount",
+  "rebate_and_discount_accounts",
+  "direct_payment_to_supplier_section",
+  "enable_direct_transfer_to_supplier",
+  "supplier_payment"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "enable_direct_transfer_to_supplier",
+   "fieldtype": "Check",
+   "label": "Enable Direct Transfer to Supplier"
+  },
+  {
+   "fieldname": "rebate_and_discount_section",
+   "fieldtype": "Section Break",
+   "label": "Rebate and Discount"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_rebate_and_discount",
+   "fieldtype": "Check",
+   "label": "Enable Rebate and Discount"
+  },
+  {
+   "fieldname": "rebate_and_discount_accounts",
+   "fieldtype": "Table",
+   "label": "Rebate and Discount Accounts",
+   "options": "Rebate and Discount Accounts"
+  },
+  {
+   "fieldname": "direct_payment_to_supplier_section",
+   "fieldtype": "Section Break",
+   "label": "Direct Payment to Supplier"
+  },
+  {
+   "fieldname": "supplier_payment",
+   "fieldtype": "Table",
+   "label": "Supplier Payment",
+   "options": "Supplier Payment"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-05-07 14:06:44.905808",
+ "modified_by": "Administrator",
+ "module": "Turk",
+ "name": "SI Home Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
