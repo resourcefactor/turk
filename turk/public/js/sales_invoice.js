@@ -97,19 +97,22 @@ frappe.ui.form.on("Sales Invoice", "validate", function (frm, cdt, cdn) {
 		})
 
 		$.each(frm.doc.items || [], function (i, d) {
-
-			// if (!d.sales_order) { d.sales_order = sales_order_no; }
-			frappe.call({
-				method: "frappe.client.get",
-				args: {
-					doctype: "Sales Order",
-					filters: { "name": d.sales_order },
-					fieldname: "cost_center"
-				},
-				callback: function (r) {
-					d.cost_center = r.message.cost_center;
-				}
-			})
+			if (d.sales_order) {
+				frappe.call({
+					method: "frappe.client.get",
+					args: {
+						doctype: "Sales Order",
+						filters: { "name": d.sales_order },
+						fieldname: "cost_center"
+					},
+					callback: function (r) {
+						if (r.message) {
+							d.cost_center = r.message.cost_center;
+							frm.refresh_field("items");
+						}
+					}
+				});
+			}
 		})
 		cur_frm.refresh_field("items");
 		if (!frm.doc.ignore_advances_calculation) {
