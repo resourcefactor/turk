@@ -97,19 +97,22 @@ frappe.ui.form.on("Sales Invoice", "validate", function (frm, cdt, cdn) {
 		})
 
 		$.each(frm.doc.items || [], function (i, d) {
-
-			// if (!d.sales_order) { d.sales_order = sales_order_no; }
-			frappe.call({
-				method: "frappe.client.get",
-				args: {
-					doctype: "Sales Order",
-					filters: { "name": d.sales_order },
-					fieldname: "cost_center"
-				},
-				callback: function (r) {
-					d.cost_center = r.message.cost_center;
-				}
-			})
+			if (d.sales_order) {
+				frappe.call({
+					method: "frappe.client.get",
+					args: {
+						doctype: "Sales Order",
+						filters: { "name": d.sales_order },
+						fieldname: "cost_center"
+					},
+					callback: function (r) {
+						if (r.message) {
+							d.cost_center = r.message.cost_center;
+							frm.refresh_field("items");
+						}
+					}
+				});
+			}
 		})
 		cur_frm.refresh_field("items");
 		if (!frm.doc.ignore_advances_calculation) {
@@ -215,7 +218,7 @@ frappe.ui.form.on('Sales Invoice Item',
 turk.SalesInvoiceController = class SalesInvoiceController extends erpnext.selling.SellingController{
 	setup(doc) {
 		this.setup_posting_date_time_check();
-		this._super(doc);
+		super.setup(doc);
 	}
 
 	company() {
@@ -239,7 +242,7 @@ turk.SalesInvoiceController = class SalesInvoiceController extends erpnext.selli
 
 	onload() {
 		var me = this;
-		this._super();
+		super.onload()
 
 		this.frm.ignore_doctypes_on_cancel_all = ['POS Invoice', 'Timesheet', 'POS Invoice Merge Log', 'POS Closing Entry'];
 		if(!this.frm.doc.__islocal && !this.frm.doc.customer && this.frm.doc.debit_to) {
@@ -263,7 +266,7 @@ turk.SalesInvoiceController = class SalesInvoiceController extends erpnext.selli
 
 	refresh(doc, dt, dn) {
 		const me = this;
-		this._super();
+		super.refresh(doc,dt,dn)
 		if(cur_frm.msgbox && cur_frm.msgbox.$wrapper.is(":visible")) {
 			// hide new msgbox
 			cur_frm.msgbox.hide();
@@ -595,7 +598,7 @@ turk.SalesInvoiceController = class SalesInvoiceController extends erpnext.selli
 	}
 
 	set_dynamic_labels() {
-		this._super();
+		super.set_dynamic_labels()
 		this.frm.events.hide_fields(this.frm)
 	}
 
@@ -695,7 +698,7 @@ turk.SalesInvoiceController = class SalesInvoiceController extends erpnext.selli
 
 	currency() {
 		var me = this;
-		this._super();
+		super.currency();
 		if (this.frm.doc.timesheets) {
 			this.frm.doc.timesheets.forEach((d) => {
 				let row = frappe.get_doc(d.doctype, d.name)
@@ -707,7 +710,9 @@ turk.SalesInvoiceController = class SalesInvoiceController extends erpnext.selli
 };
 
 // for backward compatibility: combine new and previous states
-$.extend(cur_frm.cscript, new turk.SalesInvoiceController({frm: cur_frm}));
+// $.extend(cur_frm.cscript, new turk.SalesInvoiceController({frm: cur_frm}));
+// for backward compatibility: combine new and previous states
+extend_cscript(cur_frm.cscript, new turk.SalesInvoiceController({ frm: cur_frm }));
 
 // function setseries(company) {
 // 	var ret_obj = { twarehouse: "", series: "" };
