@@ -132,7 +132,7 @@ turk.selling.SalesOrderController = class SalesOrderController extends erpnext.s
 	refresh (doc, dt, dn) {
 		this._super(doc);
 		var me = this;
-		let allow_delivery = false;
+		// let allow_delivery = false;
 		me.make_sales_invoice = this.ts_make_sales_invoice
 		me.make_material_request = this.ts_make_material_request;
 		me.make_delivery_note_based_on_delivery_date = this.ts_make_delivery_note_based_on_delivery_date;
