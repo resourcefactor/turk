@@ -189,7 +189,7 @@ function CalculateBreakage(frm) {
 
 turk.stock.PurchaseReceiptController = class PurchaseReceiptController extends erpnext.stock.PurchaseReceiptController{
 	refresh () {
-		this._super();
+		super.refresh();
 		if (!this.frm.doc.is_return && this.frm.doc.status != "Closed") {
 			if (this.frm.doc.docstatus == 0) {
 				cur_frm.remove_custom_button(__("Purchase Order"), "Get items from");
