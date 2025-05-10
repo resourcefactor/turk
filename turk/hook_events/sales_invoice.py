@@ -289,3 +289,11 @@ def validate_sales_invoice(sl, method):
 					if sl.rounded_total > reaming_amt and diff > 5:
 						frappe.throw(_("Can not allow to Invoice total amount greater then <b>{0}</b>".format(reaming_amt)))
 						break
+  
+  
+
+@frappe.whitelist()
+def make_sales_return(source_name, target_doc=None):
+	from turk.hook_events.sales_and_purchase_return_override import make_return_doc
+
+	return make_return_doc("Sales Invoice", source_name, target_doc)
