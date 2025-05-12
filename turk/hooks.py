@@ -145,9 +145,12 @@ doc_events = {
 	},
 	"Purchase Invoice" :{
 		"validate": "turk.utils.add_location",
-		"on_submit": "turk.hook_events.party_link.create_invoice_adj_jv",
+		"on_submit": ["turk.hook_events.party_link.create_invoice_adj_jv", "turk.hook_events.utils.create_landed_cost_voucher"],
 		"on_cancel": "turk.hook_events.party_link.cancel_adjusted_jv"
 	},
+     "Purchase Receipt": {
+        "on_submit": "turk.hook_events.utils.create_landed_cost_voucher",
+    },
 	"Journal Entry" :{
 		"on_cancel" : "turk.hook_events.party_link.prevent_linked_jv_cancellation"
 	}
