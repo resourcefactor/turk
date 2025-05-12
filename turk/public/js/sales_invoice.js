@@ -56,6 +56,10 @@ frappe.ui.form.on("Sales Invoice Item", {
 
 frappe.ui.form.on("Sales Invoice", "validate", function (frm, cdt, cdn) {
 	if (frm.doc.docstatus == 0) {
+		frm.doc.advances = frm.doc.advances.filter(row => {
+			return row.reference_type && row.reference_name;
+		});
+		frm.refresh_field('advances');
 		validateBoxes(frm);
 		// update_item_qty_based_on_sales_order(frm);
 		calculate_total_boxes(frm);

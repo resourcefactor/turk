@@ -196,10 +196,7 @@ override_doctype_class = {
 
 # Overriding Methods
 # ------------------------------
-#
-override_whitelisted_methods = {
-	"erpnext.accounts.doctype.sales_invoice.sales_invoice.make_sales_return": "turk.hook_events.sales_invoice.make_sales_return"
-}
+
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
