@@ -138,7 +138,8 @@ doc_events = {
 		]
 	},
 	"Payment Entry": {
-		"validate": "turk.hook_events.payment_entry.validate_sales_order"
+		"validate": "turk.hook_events.payment_entry.validate_sales_order",
+ 	"on_submit": ["turk.hook_events.payment_entry.create_payment_entry_against_payment_entry",],
 	},
 	"Opportunity": {
 		"validate": "turk.utils.send_followup_sms"

@@ -8,6 +8,7 @@ frappe.ui.form.on("Payment Entry", {
 				get_sales_order_owner(d.reference_doctype, d.reference_name, d);
 			});
 		}
+		set_supplier_property(frm);
 	},
 	validate: function (frm) {
 		if (frm.doc.docstatus == 0) {
@@ -26,6 +27,7 @@ frappe.ui.form.on("Payment Entry", {
 	},
 	mode_of_payment: function (frm) {
 		frm.events.set_total_allocated_amount(frm);
+		set_supplier_property(frm);
 		for (var row of frm.doc.references) {
 			if (row.reference_doctype == "Sales Invoice" || row.reference_doctype == "Sales Order") {
 				if (row.reference_doctype == "Sales Invoice") {
@@ -111,6 +113,37 @@ function get_sales_order_owner(doctype, docnumber, row) {
 			if (doctype == "Sales Invoice") {
 				row.cust_sales_order_owner = r.message.cust_sales_order_owner;
 			}
+		}
+	});
+}
+
+
+
+
+function set_supplier_property(frm) {
+	frappe.db.get_single_value("SI Home Settings", "enable_direct_transfer_to_supplier").then((value) => {
+		if (value == 1) {
+			frappe.db.get_doc("SI Home Settings", "SI Home Settings").then((settingsDoc) => {
+				// Ensure the child table exists and has entries
+				if (settingsDoc.supplier_payment && settingsDoc.supplier_payment.length > 0) {
+					settingsDoc.supplier_payment.forEach((row) => {
+						// Check if the mode_of_payment matches
+						if (row.mode_of_payment == frm.doc.mode_of_payment && !frm.doc.supplier_payment_entry) {
+							// Set supplier as required
+							frm.set_df_property("supplier", "reqd", 1);
+							frm.set_df_property("supplier", "hidden", 0);
+						} else {
+							frm.set_value("supplier", "");
+							frm.set_df_property("supplier", "reqd", 0);
+							frm.set_df_property("supplier", "hidden", 1);
+						}
+					});
+				}
+			});
+		} else {
+			frm.set_value("supplier", "");
+			frm.set_df_property("supplier", "reqd", 0);
+			frm.set_df_property("supplier", "hidden", 1);
 		}
 	});
 }
