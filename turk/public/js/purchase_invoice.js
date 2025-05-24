@@ -1,5 +1,23 @@
 {% include "turk/public/js/utils.js" %}
 
+frappe.ui.form.on('Purchase Invoice', {
+    refresh: function(frm) {
+        if (!frm.is_new() && frm.doc.docstatus === 1) {
+            frm.add_custom_button(
+                __("Sales Invoice"),
+                () => {
+                    frappe.model.open_mapped_doc({
+                        method: "turk.hook_events.purchase_invoice.make_sales_invoice",
+                        frm: frm,
+                    });
+                },
+                __("Create")
+            );
+        }
+    }
+});
+
+
 frappe.ui.form.on("Purchase Invoice", "onload", function (frm, cdt, cdn) {
 	if (frm.doc.docstatus == 0) {
 		$.each(frm.doc.items || [], function (i, d) {
