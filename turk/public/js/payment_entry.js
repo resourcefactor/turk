@@ -41,7 +41,30 @@ frappe.ui.form.on("Payment Entry", {
 				get_sales_order(row, doctype, fieldname);
 			}
 		}
-	}
+	},
+	received_amount: function (frm) {
+		if (frm.doc.payment_type == "Pay")
+			frm.events.allocate_party_amount_against_ref_docs(frm, frm.doc.received_amount);
+	},
+	paid_amount: function (frm) {
+		if (frm.doc.payment_type == "Receive")
+			frm.events.allocate_party_amount_against_ref_docs(frm, frm.doc.paid_amount);
+	},
+	allocate_party_amount_against_ref_docs: async function (frm, paid_amount) {
+		frappe.call({
+			method: "turk.hook_events.payment_entry.allocate_amount_to_references",
+			args: {
+				doc: frm.doc,
+				paid_amount: paid_amount,
+				allocate_payment_amount: frappe.flags.allocate_payment_amount ?? false,
+			},
+			callback: function (r) {
+				if (r.message) {
+					frappe.msgprint(r.message);
+				}
+			},
+		});
+	},
 });
 
 frappe.ui.form.on('Payment Entry Reference', {

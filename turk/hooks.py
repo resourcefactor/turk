@@ -32,30 +32,30 @@ app_include_css = "/assets/turk/css/turk.css"
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
 doctype_js = {
-		"Address": "public/js/address.js",
-		"Architect and Contractor": "public/js/architect_and_contractor.js",
-		"Authorization Rule": "public/js/authorization_rule.js",
-		"Customer": "public/js/customer.js",
-		"Delivery Note" : "public/js/delivery_note.js",
-		"Item": "public/js/item.js",
-		"Journal Entry": "public/js/journal_entry.js",
-		"Landed Cost Voucher": "public/js/landed_cost_voucher.js",
-		"Material Request" : "public/js/material_request.js",
-		"Opportunity": "public/js/opportunity.js",
-		"Payment Entry": "public/js/payment_entry.js",
-		"Property Detail": "public/js/property_detail.js",
-		"Purchase Invoice" : "public/js/purchase_invoice.js",
-		"Purchase Order" : "public/js/purchase_order.js",
-		"Purchase Receipt" : "public/js/purchase_receipt.js",
-		"Quotation" : "public/js/quotation.js",
-		"Request for Quotation": "public/js/request_for_quotation.js",
-		"Salary Slip" : "public/js/salary_slip.js",
-		"Sales Invoice" : "public/js/sales_invoice.js",
-		"Sales Order" : "public/js/sales_order.js",
-		"Stock Entry" : "public/js/stock_entry.js",
-		"Stock Reconciliation" : "public/js/stock_reconciliation.js",
-		"Supplier Quotation": "public/js/supplier_quotation.js"
-	}
+	"Address": "public/js/address.js",
+	"Architect and Contractor": "public/js/architect_and_contractor.js",
+	"Authorization Rule": "public/js/authorization_rule.js",
+	"Customer": "public/js/customer.js",
+	"Delivery Note": "public/js/delivery_note.js",
+	"Item": "public/js/item.js",
+	"Journal Entry": "public/js/journal_entry.js",
+	"Landed Cost Voucher": "public/js/landed_cost_voucher.js",
+	"Material Request": "public/js/material_request.js",
+	"Opportunity": "public/js/opportunity.js",
+	"Payment Entry": "public/js/payment_entry.js",
+	"Property Detail": "public/js/property_detail.js",
+	"Purchase Invoice": "public/js/purchase_invoice.js",
+	"Purchase Order": "public/js/purchase_order.js",
+	"Purchase Receipt": "public/js/purchase_receipt.js",
+	"Quotation": "public/js/quotation.js",
+	"Request for Quotation": "public/js/request_for_quotation.js",
+	"Salary Slip": "public/js/salary_slip.js",
+	"Sales Invoice": "public/js/sales_invoice.js",
+	"Sales Order": "public/js/sales_order.js",
+	"Stock Entry": "public/js/stock_entry.js",
+	"Stock Reconciliation": "public/js/stock_reconciliation.js",
+	"Supplier Quotation": "public/js/supplier_quotation.js",
+}
 
 # Home Pages
 # ----------
@@ -65,7 +65,7 @@ doctype_js = {
 
 # website user home page (by Role)
 # role_home_page = {
-#	"Role": "home_page"
+# "Role": "home_page"
 # }
 
 # Website user home page (by function)
@@ -135,32 +135,37 @@ doc_events = {
 		"on_cancel": [
 			"turk.hook_events.sales_invoice.update_reserved_qty",
 			"turk.hook_events.party_link.cancel_adjusted_jv"
-		]
+		],
 	},
 	"Payment Entry": {
 		"validate": "turk.hook_events.payment_entry.validate_sales_order",
- 	"on_submit": ["turk.hook_events.payment_entry.create_payment_entry_against_payment_entry",],
+		"on_submit": [
+			"turk.hook_events.payment_entry.create_payment_entry_against_payment_entry",
+		],
 	},
 	"Opportunity": {
 		"validate": "turk.utils.send_followup_sms"
 	},
-	"Purchase Invoice" :{
+	"Purchase Invoice": {
 		"validate": "turk.utils.add_location",
-		"on_submit": ["turk.hook_events.party_link.create_invoice_adj_jv", "turk.hook_events.utils.create_landed_cost_voucher"],
+		"on_submit": [
+			"turk.hook_events.party_link.create_invoice_adj_jv",
+			"turk.hook_events.utils.create_landed_cost_voucher",
+		],
 		"on_cancel": "turk.hook_events.party_link.cancel_adjusted_jv"
 	},
-     "Purchase Receipt": {
-        "on_submit": "turk.hook_events.utils.create_landed_cost_voucher",
-    },
-	"Journal Entry" :{
-		"on_cancel" : "turk.hook_events.party_link.prevent_linked_jv_cancellation"
+	"Purchase Receipt": {
+		"on_submit": "turk.hook_events.utils.create_landed_cost_voucher",
+	},
+	"Journal Entry": {
+		"on_cancel": "turk.hook_events.party_link.prevent_linked_jv_cancellation"
 	}
 }
 
 
 jenv = {
-	"methods" : [
-	"get_qrcode_image:turk.utils.get_qrcode_image"
+	"methods": [
+		"get_qrcode_image:turk.utils.get_qrcode_image"
 	]
 }
 
@@ -192,7 +197,7 @@ jenv = {
 # before_tests = "turk.install.before_tests"
 
 override_doctype_class = {
-	'Journal Entry': 'turk.hook_events.override_journal_entry.OverrideJournalEntry',
+	"Journal Entry": "turk.hook_events.override_journal_entry.OverrideJournalEntry"
 }
 
 # Overriding Methods
@@ -205,4 +210,3 @@ override_doctype_class = {
 # override_doctype_dashboards = {
 # 	"Task": "turk.task.get_dashboard_data"
 # }
-
