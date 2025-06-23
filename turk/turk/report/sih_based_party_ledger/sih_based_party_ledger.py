@@ -18,7 +18,7 @@ def get_columns():
 			"fieldname": "date",
 			"fieldtype": "Date",
 			"label": "Date",
-			"width": 150
+			"width": 120
 		},
 		{
 			"label": "Voucher Type",
@@ -49,7 +49,7 @@ def get_columns():
 			"label": "FAX No.",
 			"fieldtype": "Data",
 			"fieldname": "fax_no",
-			"width": 150
+			"width": 120
 		},
 		{
 			"fieldname": "item_code",
@@ -61,6 +61,12 @@ def get_columns():
 			"label": "Size",
 			"fieldtype": "Data",
 			"fieldname": "size",
+			"width": 100
+		},
+		{
+			"label": "Brand",
+			"fieldtype": "Data",
+			"fieldname": "brand",
 			"width": 150
 		},
 		{
@@ -110,8 +116,8 @@ def get_columns():
 
 
 def get_data(filters):
-	if filters.get('party_type') == "Customer":
-		query = """select
+    if filters.get("party_type") == "Customer":
+        query = """select
 			so.posting_date as date,
 			"Sales Invoice" as voucher_type,
 			so.name as voucher_no,
@@ -170,10 +176,12 @@ def get_data(filters):
 			left join `tabJournal Entry Account` as jea on je.name = jea.parent
 			where je.docstatus = 1 and jea.party_type = 'Customer' and jea.party = '{0}' and je.posting_date >= '{1}' and je.posting_date <= '{2}'
 			order by date
-		""".format(filters.get('party'), filters.get('from_date'), filters.get('to_date'))
+		""".format(
+            filters.get("party"), filters.get("from_date"), filters.get("to_date")
+        )
 
-	elif filters.get('party_type') == "Supplier":
-		query = """select
+    elif filters.get("party_type") == "Supplier":
+        query = """select
 			po.posting_date as date,
 			"Purchase Invoice" as voucher_type,
 			po.name as voucher_no,
@@ -232,112 +240,123 @@ def get_data(filters):
 			left join `tabJournal Entry Account` as jea on je.name = jea.parent
 			where je.docstatus = 1 and jea.party_type = 'Supplier' and jea.party = '{0}' and je.posting_date >= '{1}' and je.posting_date <= '{2}'
 			order by date
-		""".format(filters.get('party'), filters.get('from_date'), filters.get('to_date'))
-	result = frappe.db.sql(query, as_dict=True)
-	data = []
+		""".format(
+            filters.get("party"), filters.get("from_date"), filters.get("to_date")
+        )
+    result = frappe.db.sql(query, as_dict=True)
+    data = []
 
-	item_details = {}
+    item_details = {}
 
-	for res in result:
-		item_details.setdefault((res.voucher_type, res.voucher_no), []).append(res)
+    for res in result:
+        item_details.setdefault((res.voucher_type, res.voucher_no), []).append(res)
 
-	m_total_qty = m_total_boxes = m_total_debit = m_total_credit = c_balance = 0
+    m_total_qty = m_total_boxes = m_total_debit = m_total_credit = c_balance = 0
 
-	data = []
-	for key in item_details.keys():
-		voucher_type = key[0]
-		voucher_no = key[1]
+    data = []
+    for key in item_details.keys():
+        voucher_type = key[0]
+        voucher_no = key[1]
 
-		s_total_qty = s_total_boxes = s_total_debit = s_total_credit = 0
+        s_total_qty = s_total_boxes = s_total_debit = s_total_credit = 0
 
-		for d in item_details[key]:
-			s_total_qty += d.qty
-			s_total_boxes += d.boxes
-			s_total_debit += d.debit
-			s_total_credit += d.credit
-			c_balance += (d.debit - d.credit)
+        for d in item_details[key]:
+            s_total_qty += d.qty
+            s_total_boxes += d.boxes
+            s_total_debit += d.debit
+            s_total_credit += d.credit
+            c_balance += d.debit - d.credit
 
-			m_total_qty += d.qty
-			m_total_boxes += d.boxes
-			m_total_debit += d.debit
-			m_total_credit += d.credit
+            m_total_qty += d.qty
+            m_total_boxes += d.boxes
+            m_total_debit += d.debit
+            m_total_credit += d.credit
 
-			data.append({
-				"date": d.date,
-				"voucher_type": d.voucher_type,
-				"voucher_no": d.voucher_no,
-				"shipment_no": d.shipment_no,
-				"po_no": d.po_number,
-				"fax_no": d.fax_no,
-				"item_code": d.item_code,
-				"size": frappe.db.get_value("Item", d.item_code, "size"),
-				"qty": d.qty,
-				"boxes": d.boxes,
-				"rate": d.rate,
-				"debit": d.debit,
-				"credit": d.credit,
-				"balance": c_balance,
-				"remarks": d.remarks
-			})
-		if voucher_type in ["Purchase Invoice", "Sales Invoice"]:
-			v_doc = frappe.get_doc(voucher_type, voucher_no)
-			# if v_doc.discount_amount > 0:
-			if filters.get('party_type') == 'Supplier':
-				c_balance += v_doc.discount_amount
-			elif filters.get('party_type') == 'Customer':
-				c_balance -= v_doc.discount_amount
-			m_total_credit += v_doc.discount_amount
-			data.append({
-				"date": "",
-				"voucher_type": "",
-				"voucher_no": "",
-				"shipment_no": "",
-				"po_no": "",
-				"fax_no": "",
-				"item_code": "<b>Discounted Amount</b>",
-				"size": "",
-				"qty": 0,
-				"boxes": 0,
-				"rate": 0,
-				"debit": 0,
-				"credit": v_doc.discount_amount,
-				"balance": c_balance,
-				"remarks": ""
-			})
-		data.append({
-			"date": "",
-			"voucher_type": "",
-			"voucher_no": "",
-			"shipment_no": "",
-			"po_no": "",
-			"fax_no": "",
-			"item_code": "<b>Sub Total</b>",
-			"size": "",
-			"qty": s_total_qty,
-			"boxes": s_total_boxes,
-			"rate": "",
-			"debit": s_total_debit,
-			"credit": s_total_credit,
-			"balance": "",
-			"remarks": ""
-		})
-	if data:
-		data.append({
-			"date": "",
-			"voucher_type": "",
-			"voucher_no": "",
-			"shipment_no": "",
-			"po_no": "",
-			"fax_no": "",
-			"item_code": "<b>Grand Total</b>",
-			"size": "",
-			"qty": m_total_qty,
-			"boxes": m_total_boxes,
-			"rate": "",
-			"debit": m_total_debit,
-			"credit": m_total_credit,
-			"balance": "",
-			"remarks": ""
-		})
+            data.append(
+                {
+                    "date": d.date,
+                    "voucher_type": d.voucher_type,
+                    "voucher_no": d.voucher_no,
+                    "shipment_no": d.shipment_no,
+                    "po_no": d.po_number,
+                    "fax_no": d.fax_no,
+                    "item_code": d.item_code,
+                    "size": frappe.db.get_value("Item", d.item_code, "size"),
+                    "brand": frappe.db.get_value("Item", d.item_code, "brand"),
+                    "qty": d.qty,
+                    "boxes": d.boxes,
+                    "rate": d.rate,
+                    "debit": d.debit,
+                    "credit": d.credit,
+                    "balance": c_balance,
+                    "remarks": d.remarks,
+                }
+            )
+        if voucher_type in ["Purchase Invoice", "Sales Invoice"]:
+            v_doc = frappe.get_doc(voucher_type, voucher_no)
+            # if v_doc.discount_amount > 0:
+            if filters.get("party_type") == "Supplier":
+                c_balance += v_doc.discount_amount
+            elif filters.get("party_type") == "Customer":
+                c_balance -= v_doc.discount_amount
+            m_total_credit += v_doc.discount_amount
+            data.append(
+                {
+                    "date": "",
+                    "voucher_type": "",
+                    "voucher_no": "",
+                    "shipment_no": "",
+                    "po_no": "",
+                    "fax_no": "",
+                    "item_code": "<b>Discounted Amount</b>",
+                    "size": "",
+                    "qty": 0,
+                    "boxes": 0,
+                    "rate": 0,
+                    "debit": 0,
+                    "credit": v_doc.discount_amount,
+                    "balance": c_balance,
+                    "remarks": "",
+                }
+            )
+        data.append(
+            {
+                "date": "",
+                "voucher_type": "",
+                "voucher_no": "",
+                "shipment_no": "",
+                "po_no": "",
+                "fax_no": "",
+                "item_code": "<b>Sub Total</b>",
+                "size": "",
+                "qty": s_total_qty,
+                "boxes": s_total_boxes,
+                "rate": "",
+                "debit": s_total_debit,
+                "credit": s_total_credit,
+                "balance": "",
+                "remarks": "",
+            }
+        )
+    if data:
+        data.append(
+            {
+                "date": "",
+                "voucher_type": "",
+                "voucher_no": "",
+                "shipment_no": "",
+                "po_no": "",
+                "fax_no": "",
+                "item_code": "<b>Grand Total</b>",
+                "size": "",
+                "qty": m_total_qty,
+                "boxes": m_total_boxes,
+                "rate": "",
+                "debit": m_total_debit,
+                "credit": m_total_credit,
+                "balance": "",
+                "remarks": "",
+            }
+        )
 
-	return data
+    return data
