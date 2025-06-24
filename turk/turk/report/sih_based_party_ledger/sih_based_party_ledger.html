@@ -16,10 +16,11 @@
 			<th style="width: 10%">{%= __("PO No.") %}</th>
 			<th style="width: 10%">{%= __("FAX No.") %}</th>
 			<th style="width: 10%">{%= __("Item Code") %}</th>
-			<th style="width: 13%">{%= __("Size") %}</th>
-			<th style="width: 10%">{%= __("Debit") %}</th>
-			<th style="width: 10%">{%= __("Credit") %}</th>
-			<th style="width: 15%">{%= __("Balance") %}</th>
+			<th style="width: 10%">{%= __("Size") %}</th>
+			<th style="width: 10%">{%= __("Brand") %}</th>
+			<th style="width: 9%">{%= __("Debit") %}</th>
+			<th style="width: 9%">{%= __("Credit") %}</th>
+			<th style="width: 10%">{%= __("Balance") %}</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -46,6 +47,7 @@
 					<td>{%= data[i].fax_no %}</td>
 					<td>{%= data[i].item_code %}</td>
 					<td>{%= data[i].size %}</td>
+					<td>{%= data[i].brand %}</td>
 					<td style="text-align: right;">{%= format_currency(data[i].debit, filters.presentation_currency) %}</td>
 					<td style="text-align: right;">{%= format_currency(data[i].credit, filters.presentation_currency) %}</td>
 					<td style="text-align: right;">{%= format_currency(data[i].balance, filters.presentation_currency) %}</td>
