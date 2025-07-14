@@ -164,7 +164,7 @@ def get_stock_ledger_entries(filters, items):
 			sle.item_code, warehouse, sle.posting_date, sle.actual_qty, sle.valuation_rate,
 			sle.company, sle.voucher_type, sle.qty_after_transaction, sle.stock_value_difference
 		from
-			`tabStock Ledger Entry` sle force index (posting_sort_index)
+			`tabStock Ledger Entry` sle
 		where sle.docstatus < 2 %s %s
 		order by sle.posting_date, sle.posting_time, sle.name"""
         % (item_conditions_sql, conditions),
