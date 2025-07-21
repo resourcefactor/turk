@@ -18,6 +18,14 @@ frappe.ui.form.on("Payment Entry", {
 				return;
 			}
 		}
+		const postingDate = frappe.datetime.str_to_obj(frm.doc.posting_date);
+        const today = frappe.datetime.str_to_obj(frappe.datetime.get_today());
+
+        if (postingDate > today) {
+            frappe.msgprint("Posting Date cannot be in the future.");
+            frappe.validated = false;
+            return;
+        }
 	},
 	company: function (frm) {
 		link_si_to_so(frm);
