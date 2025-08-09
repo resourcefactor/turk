@@ -1,0 +1,50 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2025-08-09 18:03:45.568225",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "SARWAR & SONS",
+ "letterhead": null,
+ "modified": "2025-08-09 18:03:45.568225",
+ "modified_by": "Administrator",
+ "module": "Turk",
+ "name": "General Ledger SI",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "GL Entry",
+ "report_name": "General Ledger SI",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Auditor"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Single Director TC"
+  },
+  {
+   "role": "Ahmad"
+  },
+  {
+   "role": "Noman"
+  },
+  {
+   "role": "Inaam"
+  },
+  {
+   "role": "Recovery Officer TC"
+  }
+ ],
+ "timeout": 0
+}
