@@ -216,15 +216,22 @@ class PartyLedgerSummaryReport:
 
 		columns += [
 			{
-				"label": _("Closing Balance"),
-				"fieldname": "closing_balance",
+				"label": _("Closing Balance (Positive)"),
+				"fieldname": "closing_balance_positive",
 				"fieldtype": "Currency",
 				"options": "currency",
 				"width": 120,
 			},
 			{
-				"label": _("Closing Balance (Positive)"),
-				"fieldname": "closing_balance_positive",
+				"label": _("Closing Balance (Negative)"),
+				"fieldname": "closing_balance_negative",
+				"fieldtype": "Currency",
+				"options": "currency",
+				"width": 120,
+			},
+			{
+				"label": _("Closing Balance"),
+				"fieldname": "closing_balance",
 				"fieldtype": "Currency",
 				"options": "currency",
 				"width": 120,
@@ -345,7 +352,12 @@ class PartyLedgerSummaryReport:
 				for account in self.party_adjustment_accounts:
 					row["adj_" + scrub(account)] = adjustments.get(account, 0)
 
-				row.closing_balance_positive = abs(row.closing_balance)
+				row.closing_balance_positive = (
+					row.closing_balance if row.closing_balance > 0 else 0
+				)
+				row.closing_balance_negative = (
+					row.closing_balance if row.closing_balance < 0 else 0
+				)
 
 				out.append(row)
 
