@@ -546,6 +546,70 @@ def ts_make_sales_invoice(source_name, target_doc=None):
 	return doc
 
 
+@frappe.whitelist()
+def make_debit_note_from_sales_return(source_name):
+	sales_return = frappe.get_doc("Sales Invoice", source_name)
+
+	if not sales_return.is_return:
+		frappe.throw(_("Debit Note can only be created from a Sales Invoice Return"))
+
+	items_by_purchase_invoice = {}
+	for item in sales_return.items:
+		if not item.purchase_invoice:
+			frappe.throw(
+				_("Row #{0}: Item {1} is not linked to a Purchase Invoice").format(
+					item.idx, item.item_code
+				)
+			)
+		items_by_purchase_invoice.setdefault(item.purchase_invoice, []).append(item)
+
+	debit_notes = []
+	for purchase_invoice, items in items_by_purchase_invoice.items():
+		pi = frappe.get_doc("Purchase Invoice", purchase_invoice)
+		pi_items_by_code = {}
+		for pi_item in pi.items:
+			pi_items_by_code.setdefault(pi_item.item_code, pi_item)
+
+		debit_note = frappe.new_doc("Purchase Invoice")
+		debit_note.supplier = pi.supplier
+		debit_note.company = pi.company
+		debit_note.is_return = 1
+		debit_note.return_against = pi.name
+		debit_note.set_posting_time = 1
+		debit_note.posting_date = sales_return.posting_date
+		debit_note.posting_time = sales_return.posting_time
+		debit_note.shipment_no = pi.shipment_no
+
+		for item in items:
+			pi_item = pi_items_by_code.get(item.item_code)
+			if not pi_item:
+				frappe.throw(
+					_("Item {0} not found in Purchase Invoice {1}").format(
+						item.item_code, pi.name
+					)
+				)
+
+			debit_note.append("items", {
+				"item_code": pi_item.item_code,
+				"item_name": pi_item.item_name,
+				"description": pi_item.description,
+				"qty": item.qty,
+				"uom": pi_item.uom,
+				"conversion_factor": pi_item.conversion_factor,
+				"rate": pi_item.rate,
+				"warehouse": pi_item.warehouse,
+				"expense_account": pi_item.expense_account,
+				"cost_center": pi_item.cost_center,
+			})
+
+		debit_note.run_method("set_missing_values")
+		debit_note.run_method("calculate_taxes_and_totals")
+		debit_note.insert()
+		debit_notes.append(debit_note.name)
+
+	return debit_notes
+
+
 def send_followup_sms(opportunity, method):
 	def validate_number(number_list):
 		validated_number_list=[]

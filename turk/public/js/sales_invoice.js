@@ -318,6 +318,15 @@ turk.SalesInvoiceController = class SalesInvoiceController extends erpnext.selli
 					this.make_sales_return, __('Create'));
 				cur_frm.page.set_inner_btn_group_as_primary(__('Create'));
 			}
+		}
+
+		if (doc.docstatus == 1 && doc.is_return) {
+			cur_frm.add_custom_button(__('Debit Note'),
+				() => this.make_debit_note(), __('Create'));
+			cur_frm.page.set_inner_btn_group_as_primary(__('Create'));
+		}
+
+		if (doc.docstatus == 1 && !doc.is_return) {
 
 			if (cint(doc.update_stock) != 1) {
 				// show Make Delivery Note button only if Sales Invoice is not created from Delivery Note
@@ -628,6 +637,24 @@ turk.SalesInvoiceController = class SalesInvoiceController extends erpnext.selli
 			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.make_sales_return",
 			frm: cur_frm
 		})
+	}
+
+	make_debit_note() {
+		frappe.call({
+			method: "turk.utils.make_debit_note_from_sales_return",
+			args: { source_name: cur_frm.doc.name },
+			freeze: true,
+			freeze_message: __("Creating Debit Note..."),
+			callback: function (r) {
+				if (r.message && r.message.length) {
+					if (r.message.length === 1) {
+						frappe.set_route("Form", "Purchase Invoice", r.message[0]);
+					} else {
+						frappe.msgprint(__("Debit Notes created: {0}", [r.message.join(", ")]));
+					}
+				}
+			}
+		});
 	}
 
 	asset(frm, cdt, cdn) {
