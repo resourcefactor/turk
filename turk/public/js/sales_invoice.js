@@ -4,6 +4,11 @@ frappe.provide("turk");
 
 
 frappe.ui.form.on("Sales Invoice", "onload", function (frm, cdt, cdn) {
+	if (frm.is_new() && frm.doc.is_return && frm.doc.shipment_no
+		&& !frm.doc.shipment_no.startsWith('R-')) {
+		frm.set_value('shipment_no', 'R-' + frm.doc.shipment_no);
+	}
+
 	if (frm.doc.docstatus == 0) {
 		// if (frm.doc.is_return == 1) { frm.set_df_property("update_stock", "read_only", 1); }
 		//	frm.get_field("custom_delivery_warehouse").get_query = function (doc, cdt, cdn) {

@@ -1356,7 +1356,7 @@
    "label": "Shipment No",
    "length": 0,
    "mandatory_depends_on": null,
-   "modified": "2021-03-03 19:07:36.294498",
+   "modified": "2026-08-08 11:07:36.294498",
    "modified_by": "Administrator",
    "name": "Sales Invoice-shipment_no",
    "no_copy": 0,
@@ -1377,7 +1377,7 @@
    "reqd": 1,
    "search_index": 0,
    "translatable": 0,
-   "unique": 0,
+   "unique": 1,
    "width": null
   },
   {

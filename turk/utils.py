@@ -578,7 +578,14 @@ def make_debit_note_from_sales_return(source_name):
 		debit_note.set_posting_time = 1
 		debit_note.posting_date = sales_return.posting_date
 		debit_note.posting_time = sales_return.posting_time
-		debit_note.shipment_no = pi.shipment_no
+
+		debit_note.shipment_no = sales_return.shipment_no
+
+		debit_note.bill_no = pi.bill_no
+		debit_note.bill_date = pi.bill_date
+		debit_note.remarks = _("Debit Note against {0} for Sales Return {1}").format(
+			pi.name, sales_return.name
+		)
 
 		for item in items:
 			pi_item = pi_items_by_code.get(item.item_code)
@@ -600,6 +607,7 @@ def make_debit_note_from_sales_return(source_name):
 				"warehouse": pi_item.warehouse,
 				"expense_account": pi_item.expense_account,
 				"cost_center": pi_item.cost_center,
+				"purchase_invoice_item": pi_item.name,
 			})
 
 		debit_note.run_method("set_missing_values")
