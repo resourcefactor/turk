@@ -113,6 +113,10 @@ doctype_js = {
 #	}
 # }
 
+override_whitelisted_methods = {
+	"frappe.desk.query_report.get_script": "turk.hook_events.query_report.get_script",
+}
+
 doc_events = {
 	"Sales Order": {
 		"validate": "turk.hook_events.sales_order.set_average_valuation_rate",
