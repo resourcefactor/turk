@@ -433,12 +433,8 @@ class GrossProfitGenerator(object):
 					# find the stock valution rate from stock ledger entry
 					if sle.voucher_type == parenttype and parent == sle.voucher_no and \
 						sle.voucher_detail_no == row.item_row:
-							previous_stock_value = len(my_sle) > i+1 and \
-								flt(my_sle[i+1].stock_value) or 0.0
-							if previous_stock_value:
-								return previous_stock_value - flt(sle.stock_value)
-							else:
-								return flt(row.qty) * self.get_average_buying_rate(row, item_code)
+							# cost of goods sold for this row as booked in the stock ledger
+							return -flt(sle.stock_value_difference)
 			else:
 				return flt(row.qty) * self.get_average_buying_rate(row, item_code)
 
@@ -484,12 +480,11 @@ class GrossProfitGenerator(object):
 
 	def load_stock_ledger_entries(self):
 		res = frappe.db.sql("""select item_code, voucher_type, voucher_no,
-				voucher_detail_no, stock_value, warehouse, actual_qty as qty
+				voucher_detail_no, stock_value, stock_value_difference, warehouse, actual_qty as qty
 			from `tabStock Ledger Entry`
-			where company=%(company)s
+			where company=%(company)s and is_cancelled=0
 			order by
-				item_code desc, warehouse desc, posting_date desc,
-				posting_time desc, name desc""", self.filters, as_dict=True)
+				item_code desc, warehouse desc, posting_datetime desc, creation desc""", self.filters, as_dict=True)
 		self.sle = {}
 		for r in res:
 			if (r.item_code, r.warehouse) not in self.sle:

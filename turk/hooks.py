@@ -200,6 +200,9 @@ jenv = {
 
 # before_tests = "turk.install.before_tests"
 
+before_job = ["turk.hook_events.stock_ledger_patch.apply_patches"]
+before_request = ["turk.hook_events.stock_ledger_patch.apply_patches"]
+
 override_doctype_class = {
 	"Journal Entry": "turk.hook_events.override_journal_entry.OverrideJournalEntry"
 }
