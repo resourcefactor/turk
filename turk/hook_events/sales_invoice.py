@@ -128,6 +128,33 @@ def validate_discount_while_return(si, method):
 				frappe.throw(_("Invoice(s) against the Sales Order was settled with discount of amount {0} {1}".format(currency, total_discount)))
 
 
+def validate_duplicate_return(si, method):
+	if not si.is_return or not si.return_against:
+		return
+
+	existing_return = frappe.db.get_value(
+		"Sales Invoice",
+		{
+			"is_return": 1,
+			"return_against": si.return_against,
+			"docstatus": ["in", [0, 1]],
+			"name": ["!=", si.name],
+		},
+		"name",
+	)
+
+	if existing_return:
+		frappe.throw(
+			_(
+				"A Credit Note / Return {0} already exists against {1}. "
+				"Please cancel it before creating another return."
+			).format(
+				frappe.utils.get_link_to_form("Sales Invoice", existing_return),
+				si.return_against,
+			)
+		)
+
+
 def validate_user_warehouse(si, method):
 	if si.update_stock:
 		user_warehouse = frappe.db.get_value("User",{"name": frappe.session['user']}, "user_warehouse")

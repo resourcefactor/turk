@@ -127,6 +127,7 @@ doc_events = {
 		"validate": [
 			"turk.hook_events.sales_invoice.validate_discount_while_return",
 			"turk.hook_events.sales_invoice.validate_taxes_and_charges_from_so",
+			"turk.hook_events.sales_invoice.validate_duplicate_return",
 			"turk.utils.add_location",
 			"turk.hook_events.sales_invoice.validate_sales_invoice"
 		],
