@@ -1,6 +1,28 @@
 // Copyright (c) 2025, RC and contributors
 // For license information, please see license.txt
 
+(function () {
+	if (frappe.ui.__customer_ledger_summary_sih_include_filters_patch) return;
+	frappe.ui.__customer_ledger_summary_sih_include_filters_patch = true;
+
+	var original_get_print_settings = frappe.ui.get_print_settings;
+	frappe.ui.get_print_settings = function () {
+		var dialog = original_get_print_settings.apply(this, arguments);
+
+		if (
+			dialog &&
+			dialog.fields_dict &&
+			dialog.fields_dict.include_filters &&
+			frappe.query_report &&
+			frappe.query_report.report_name === "Customer Ledger Summary SIH"
+		) {
+			dialog.set_value("include_filters", 1);
+		}
+
+		return dialog;
+	};
+})();
+
 frappe.query_reports["Customer Ledger Summary SIH"] = {
 	filters: [
 		{
